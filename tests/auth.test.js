@@ -1,5 +1,6 @@
 import app from '../src/app'
 import request from 'supertest'
+import User from '../src/models/User'
 
 const newUser = {
   name: 'Pepito',
@@ -8,14 +9,105 @@ const newUser = {
   password: 'pepe1234',
   currency: 'ars'
 };
+const repeatedUser = {
+  name: 'Jane',
+  surname: 'Doe',
+  username: 'jane',
+  password: 'password123',
+  currency: 'usd'
+};
+
+beforeAll(async () => {
+  await User.deleteMany({username: { $in: [newUser.username, repeatedUser.username]}});
+  await request(app)
+  .post('/auth/signup')
+  .send(repeatedUser);
+});
+
+afterAll(() => {
+  User.deleteMany({username: { $in: [newUser.username, repeatedUser.username]}});
+});
 
 describe('/auth/signup', () => {
+  it('does not recieve incomplete information', async (done) => {
+    const res = await request(app)
+    .post('/auth/signup')
+    .send({
+      username: 'elpepe',
+      password: 'pepe1234',
+      currency: 'ars'
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(400);
+    done();
+  });
+
+  it('does not recieve short password', async (done) => {
+    const res = await request(app)
+    .post('/auth/signup')
+    .send({
+      name: 'Pepito',
+      surname: 'Perez',
+      username: 'elpepe',
+      password: 'pepe',
+      currency: 'ars'
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(403);
+    done();
+  });
+
+  it('does not recieve non-alphanumeric password', async (done) => {
+    const res = await request(app)
+    .post('/auth/signup')
+    .send({
+      name: 'Pepito',
+      surname: 'Perez',
+      username: 'elpepe',
+      password: 'pepe@%#!',
+      currency: 'ars'
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(403);
+    done();
+  });
+
+  it('does not recieve other currencies', async (done) => {
+    const res = await request(app)
+    .post('/auth/signup')
+    .send({
+      name: 'Pepito',
+      surname: 'Perez',
+      username: 'elpepe',
+      password: 'pepe1234',
+      currency: 'cop'
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(403);
+    done();
+  });
+
   it('creates a new user', async (done) => {
     const res = await request(app)
-    .get('/auth/signup')
+    .post('/auth/signup')
     .send(newUser);
     expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('token');
     expect(res.status).toBe(201);
+    done();
+  });
+
+  it('does not allow to create duplicate username', async (done) => {
+    const res = await request(app)
+    .post('/auth/signup')
+    .send(repeatedUser);
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(409);
     done();
   });
 });
