@@ -29,6 +29,16 @@ afterAll(() => {
 });
 
 describe('/auth/signup', () => {
+  it('creates a new user', async (done) => {
+    const res = await request(app)
+    .post('/auth/signup')
+    .send(newUser);
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('token');
+    expect(res.status).toBe(201);
+    done();
+  });
+
   it('does not recieve incomplete information', async (done) => {
     const res = await request(app)
     .post('/auth/signup')
@@ -91,16 +101,6 @@ describe('/auth/signup', () => {
     done();
   });
 
-  it('creates a new user', async (done) => {
-    const res = await request(app)
-    .post('/auth/signup')
-    .send(newUser);
-    expect(res.type).toEqual('application/json');
-    expect(res.body).toHaveProperty('token');
-    expect(res.status).toBe(201);
-    done();
-  });
-
   it('does not allow to create duplicate username', async (done) => {
     const res = await request(app)
     .post('/auth/signup')
@@ -108,6 +108,48 @@ describe('/auth/signup', () => {
     expect(res.type).toEqual('application/json');
     expect(res.body).toHaveProperty('message');
     expect(res.status).toBe(409);
+    done();
+  });
+});
+
+
+describe('/auth/login', () => {
+  it('logs in an user and returns a token', async (done) => {
+    const res = await request(app)
+    .post('/auth/login')
+    .send({
+      username: newUser.username,
+      password: newUser.password
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('token');
+    expect(res.status).toBe(200);
+    done();
+  });
+  
+  it('does not login for non-existent username', async (done) => {
+    const res = await request(app)
+    .post('/auth/login')
+    .send({
+      username: 'johndoe',
+      password: 'password'
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(401);
+    done();
+  });
+  
+  it('does not login for incorrect password', async (done) => {
+    const res = await request(app)
+    .post('/auth/login')
+    .send({
+      username: newUser.username,
+      password: 'password'
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(401);
     done();
   });
 });

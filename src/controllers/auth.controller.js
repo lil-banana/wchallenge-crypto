@@ -26,3 +26,19 @@ export const signup = async (req, res) => {
 
   res.status(201).json({token})
 }
+
+export const login = async (req, res) => {
+  const {username, password} = req.body;
+
+  const user = await User.findOne({username});
+
+  if (!user) return res.status(401).json({message: 'The username is not correct'})
+  
+  const passwordMatch = await User.compare(password, user.password)
+
+  if (!passwordMatch) return res.status(401).json({message: 'The password is not correct'})
+
+  const token = jwt.sign({id: user._id, currency: user.currency}, process.env.JWT_SECRET, {expiresIn: 3600});
+
+  res.status(200).json({token})
+}
