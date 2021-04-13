@@ -32,15 +32,15 @@ export const login = async (req, res) => {
 
   if(!username || !password) return res.status(400).json({message: 'Missing username or password'})
 
-  const user = await User.findOne({username});
+  const userFound = await User.findOne({username});
 
-  if (!user) return res.status(401).json({message: 'The username is not correct'})
+  if (!userFound) return res.status(401).json({message: 'The username is not correct'})
   
-  const passwordMatch = await User.compare(password, user.password)
+  const passwordMatch = await User.compare(password, userFound.password)
 
   if (!passwordMatch) return res.status(401).json({message: 'The password is not correct'})
 
-  const token = jwt.sign({id: user._id, currency: user.currency}, process.env.JWT_SECRET, {expiresIn: 3600});
+  const token = jwt.sign({id: userFound._id, currency: userFound.currency}, process.env.JWT_SECRET, {expiresIn: 3600});
 
   res.status(200).json({token})
 }

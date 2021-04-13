@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon --exec babel-node -r dotenv/config src/index.js",
-    "test": "jest --setupFiles dotenv/config --detectOpenHandles --forceExit",
-    "test:cover": "jest --setupFiles dotenv/config --coverage",
+    "test": "jest --setupFiles dotenv/config --runInBand --forceExit",
+    "test:cover": "jest --setupFiles dotenv/config --runInBand --coverage",
     "test:watch": "jest --setupFiles dotenv/config --watch"
   },
   "jest": {

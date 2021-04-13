@@ -18,6 +18,7 @@ beforeAll(async () => {
   .post('/auth/signup')
   .send(newUser)
   .then(res => res.body.token);
+  await User.findOneAndUpdate({username: newUser.username}, {coins: ['bitcoin']})
 });
 
 afterAll(async () => {
@@ -48,7 +49,7 @@ describe('/coins', () => {
     }));
     expect(res.status).toBe(200);
     done();
-  }, 10000);
+  }, 15000);
 
   it('gets 100 coins per page when per_page not given', async (done) => {
     const page = 3;
@@ -69,7 +70,7 @@ describe('/coins', () => {
     }));
     expect(res.status).toBe(200);
     done();
-  }, 10000);
+  }, 15000);
 
   it('gets coins when page not given', async (done) => {
     const per_page = 3;
@@ -90,7 +91,7 @@ describe('/coins', () => {
     }));
     expect(res.status).toBe(200);
     done();
-  }, 10000);
+  }, 15000);
 
   it('does not recieve non-numeric per_page or page', async (done) => {
     const per_page = 'perpage';
@@ -124,7 +125,7 @@ describe('/coins', () => {
     done();
   });
 
-  it('denies the request when token is not sent', async (done) => {
+  it('denies the request when no token is sent', async (done) => {
     const per_page = 250;
     const page = 2;
 
@@ -150,6 +151,74 @@ describe('/coins', () => {
       per_page,
       page
     });
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message');
+    done();
+  });
+});
+
+
+describe('/coins/follow', () => {
+  it('follows a coin', async (done) => {
+    const res = await request(app)
+    .post('/coins/follow')
+    .set('x-access-token', token)
+    .send({coinId: 'dogecoin'});
+
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(201);
+    done();
+  }, 15000);
+
+  it('does not follow a coin already followed', async (done) => {
+    const res = await request(app)
+    .post('/coins/follow')
+    .set('x-access-token', token)
+    .send({coinId: 'bitcoin'});
+
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(409);
+    done();
+  });
+
+  it('does not follow a coin that does not exist', async (done) => {
+    const res = await request(app)
+    .post('/coins/follow')
+    .set('x-access-token', token)
+    .send({coinId: 'nonexistentcoin'});
+
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(404);
+    done();
+  }, 15000);
+
+  it('denies the request when no coin is sent', async (done) => {
+    const res = await request(app)
+    .post('/coins/follow')
+    .set('x-access-token', token)
+    .send();
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+    done();
+  });
+
+  it('denies the request when no token is sent', async (done) => {
+    const res = await request(app)
+    .post('/coins/follow')
+    .send({coinId: 'ethereum'});
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+    done();
+  });
+
+  it('denies the request when token is invalid', async (done) => {
+    const res = await request(app)
+    .post('/coins/follow')
+    .set('x-access-token', 'fakeorexpiredtoken')
+    .send({coinId: 'ethereum'});
     expect(res.status).toBe(401);
     expect(res.body).toHaveProperty('message');
     done();
