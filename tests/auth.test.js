@@ -9,6 +9,7 @@ const newUser = {
   password: 'pepe1234',
   currency: 'ars'
 };
+
 const repeatedUser = {
   name: 'Jane',
   surname: 'Doe',
@@ -24,8 +25,8 @@ beforeAll(async () => {
   .send(repeatedUser);
 });
 
-afterAll(() => {
-  User.deleteMany({username: { $in: [newUser.username, repeatedUser.username]}});
+afterAll(async () => {
+  await User.deleteMany({username: { $in: [newUser.username, repeatedUser.username]}});
 });
 
 describe('/auth/signup', () => {
@@ -33,6 +34,7 @@ describe('/auth/signup', () => {
     const res = await request(app)
     .post('/auth/signup')
     .send(newUser);
+
     expect(res.type).toEqual('application/json');
     expect(res.body).toHaveProperty('token');
     expect(res.status).toBe(201);
@@ -47,6 +49,7 @@ describe('/auth/signup', () => {
       password: 'pepe1234',
       currency: 'ars'
     });
+
     expect(res.type).toEqual('application/json');
     expect(res.body).toHaveProperty('message');
     expect(res.status).toBe(400);
@@ -63,6 +66,7 @@ describe('/auth/signup', () => {
       password: 'pepe',
       currency: 'ars'
     });
+
     expect(res.type).toEqual('application/json');
     expect(res.body).toHaveProperty('message');
     expect(res.status).toBe(403);
@@ -79,6 +83,7 @@ describe('/auth/signup', () => {
       password: 'pepe@%#!',
       currency: 'ars'
     });
+
     expect(res.type).toEqual('application/json');
     expect(res.body).toHaveProperty('message');
     expect(res.status).toBe(403);
@@ -95,6 +100,7 @@ describe('/auth/signup', () => {
       password: 'pepe1234',
       currency: 'cop'
     });
+
     expect(res.type).toEqual('application/json');
     expect(res.body).toHaveProperty('message');
     expect(res.status).toBe(403);
@@ -105,6 +111,7 @@ describe('/auth/signup', () => {
     const res = await request(app)
     .post('/auth/signup')
     .send(repeatedUser);
+
     expect(res.type).toEqual('application/json');
     expect(res.body).toHaveProperty('message');
     expect(res.status).toBe(409);

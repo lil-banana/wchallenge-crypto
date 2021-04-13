@@ -5,12 +5,15 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon --exec babel-node -r dotenv/config src/index.js",
-    "test": "jest --setupFiles dotenv/config --detectOpenHandles",
+    "test": "jest --setupFiles dotenv/config --detectOpenHandles --forceExit",
     "test:cover": "jest --setupFiles dotenv/config --coverage",
     "test:watch": "jest --setupFiles dotenv/config --watch"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+        "src/database.js" 
+    ]
   },
   "keywords": [],
   "author": "lil-banana",
