@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon --exec babel-node -r dotenv/config src/index.js",
     "test": "jest --setupFiles dotenv/config --detectOpenHandles",
-    "test:cover": "jest --setupFiles dotenv/config --coverage"
+    "test:cover": "jest --setupFiles dotenv/config --coverage",
+    "test:watch": "jest --setupFiles dotenv/config --watch"
   },
   "jest": {
     "testEnvironment": "node"

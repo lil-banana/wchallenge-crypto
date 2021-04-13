@@ -152,4 +152,16 @@ describe('/auth/login', () => {
     expect(res.status).toBe(401);
     done();
   });
+  
+  it('does not login for missing username or password', async (done) => {
+    const res = await request(app)
+    .post('/auth/login')
+    .send({
+      username: newUser.username
+    });
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(400);
+    done();
+  });
 });
