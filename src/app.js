@@ -8,7 +8,8 @@ import '../src/database'
 import authRoutes from './routes/auth.routes'
 import coinsRoutes from './routes/coins.routes'
 
-const app = express()
+
+const app = express();
 
 app.set('port', 3000);
 

@@ -22,8 +22,7 @@ export const followCoin = async (req, res) => {
   
   if(!coinId) return res.status(400).json({message: 'No coin id provided'})
 
-  const userFound = await User.findById(req.userId).select("-password");
-  const userCoins = userFound.coins;
+  const userCoins = await User.findById(req.userId).then(user => user.coins);
 
   if(userCoins.includes(coinId)) return res.status(409).json({message: 'Coin already followed'})
 
@@ -34,4 +33,49 @@ export const followCoin = async (req, res) => {
   const userUpdated = await User.findByIdAndUpdate(req.userId,{coins: userCoins.concat(coinId)});
 
   res.status(201).json({message: `Now following ${coinId}`})
+}
+
+export const topN = async (req, res) => {
+  const n = req.query.n;
+  const order = req.query.order;
+
+  const currency = req.currency;
+  
+  if (!n) return res.status(400).json({message: 'No number for top n provided'})
+  if (isNaN(n) || n < 1 || n > 25) return res.status(400).json({message: 'Number is invalid or out of range'})
+
+  let sortFunc;
+
+  if (!order || order == 'desc') {
+    sortFunc = (a, b) => parseFloat(b.current_price) - parseFloat(a.current_price);
+  } else if (order == 'asc') {
+    sortFunc = (a, b) => parseFloat(a.current_price) - parseFloat(b.current_price);
+  } else {
+    return res.status(400).json({message: 'Invalid order value given'})
+  }
+
+  const userCoins = await User.findById(req.userId).then(user => user.coins);
+
+  const coinsStr = userCoins.join(',');
+
+  const coingeckoRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&ids=${coinsStr}`)
+  .then(res => res.json());
+
+  const firstNCoinsData = coingeckoRes.sort(sortFunc).slice(0,n);
+
+  const firstNIds = firstNCoinsData.map(coin => coin.id).join(',');
+  
+  const currencies = 'ars,eur,usd';
+  const coingeckoPrices = await fetch(`https://api.coingecko.com/api/v3/simple/price?vs_currencies=${currencies}&ids=${firstNIds}`)
+  .then(res => res.json());
+
+  const formattedCoins = firstNCoinsData.map(coin => ({
+    symbol: coin.symbol,
+    price: coingeckoPrices[coin.id],
+    name: coin.name,
+    image: coin.image,
+    last_updated: coin.last_updated,
+  }));
+
+  res.status(200).json(formattedCoins)
 }

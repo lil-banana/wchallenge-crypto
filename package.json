@@ -7,12 +7,12 @@
     "start": "nodemon --exec babel-node -r dotenv/config src/index.js",
     "test": "jest --setupFiles dotenv/config --runInBand --forceExit",
     "test:cover": "jest --setupFiles dotenv/config --runInBand --coverage",
-    "test:watch": "jest --setupFiles dotenv/config --watch"
+    "test:watch": "jest --setupFiles dotenv/config --runInBand --watch"
   },
   "jest": {
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
-        "src/database.js" 
+      "src/database.js"
     ]
   },
   "keywords": [],
@@ -26,7 +26,9 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.3",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "swagger-jsdoc": "^7.0.0-rc.6",
+    "swagger-ui-express": "^4.1.6"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.14",

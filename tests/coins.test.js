@@ -18,7 +18,7 @@ beforeAll(async () => {
   .post('/auth/signup')
   .send(newUser)
   .then(res => res.body.token);
-  await User.findOneAndUpdate({username: newUser.username}, {coins: ['bitcoin']})
+  await User.findOneAndUpdate({username: newUser.username}, {coins: ['bitcoin', 'ripple', 'tether', 'cardano', 'polkadot']})
 });
 
 afterAll(async () => {
@@ -224,3 +224,126 @@ describe('/coins/follow', () => {
     done();
   });
 });
+
+
+describe('/coins/top', () => {
+  it('gets the top n of followed coins', async (done) => {
+    const n = 4;
+    const order = 'asc';
+
+    const res = await request(app)
+    .get('/coins/top')
+    .set('x-access-token', token)
+    .query({n, order});
+    
+    expect(res.type).toEqual('application/json');
+    expect(res.body.length).toEqual(n);
+    expect(res.body[0]).toEqual(expect.objectContaining({
+      symbol: expect.any(String),
+      price: expect.objectContaining({
+        ars: expect.any(Number),
+        eur: expect.any(Number),
+        usd: expect.any(Number)
+      }),
+      name: expect.any(String),
+      image: expect.any(String),
+      last_updated: expect.any(String)
+    }));
+    expect(res.status).toBe(200);
+    done();
+  }, 15000);
+
+  it('gets the top n of followed coins when no order param given', async (done) => {
+    const n = 3;
+
+    const res = await request(app)
+    .get('/coins/top')
+    .set('x-access-token', token)
+    .query({n});
+    
+    expect(res.type).toEqual('application/json');
+    expect(res.body.length).toEqual(n);
+    expect(res.body[0]).toEqual(expect.objectContaining({
+      symbol: expect.any(String),
+      price: expect.objectContaining({
+        ars: expect.any(Number),
+        eur: expect.any(Number),
+        usd: expect.any(Number)
+      }),
+      name: expect.any(String),
+      image: expect.any(String),
+      last_updated: expect.any(String)
+    }));
+    expect(res.status).toBe(200);
+    done();
+  }, 15000);
+
+  it('denies the request when no n parameter is sent', async (done) => {
+    const order = 'asc';
+
+    const res = await request(app)
+    .get('/coins/top')
+    .set('x-access-token', token)
+    .query({});
+    
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(400);
+    done();
+  });
+
+  it('denies the request when n parameter is not valid', async (done) => {
+    const n = 'n';
+    const order = 'asc';
+    
+    const res = await request(app)
+    .get('/coins/top')
+    .set('x-access-token', token)
+    .query({n, order});
+    
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(400);
+    done();
+  });
+
+  it('denies the request when order parameter is not valid', async (done) => {
+    const n = 5;
+    const order = 'random';
+
+    const res = await request(app)
+    .get('/coins/top')
+    .set('x-access-token', token)
+    .query({n, order});
+    
+    expect(res.type).toEqual('application/json');
+    expect(res.body).toHaveProperty('message');
+    expect(res.status).toBe(400);
+    done();
+  });
+
+  it('denies the request when no token is sent', async (done) => {
+    const n = 4;
+    const order = 'asc';
+
+    const res = await request(app)
+    .get('/coins/top')
+    .query({n, order});
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+    done();
+  });
+
+  it('denies the request when token is invalid', async (done) => {
+    const n = 4;
+    const order = 'asc';
+    
+    const res = await request(app)
+    .get('/coins/top')
+    .set('x-access-token', 'fakeorexpiredtoken')
+    .query({n, order});
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message');
+    done();
+  });
+})
